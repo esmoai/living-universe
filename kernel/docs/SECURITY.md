@@ -1,48 +1,33 @@
-# Security charter — dual-architecture Stage 0
+# Kernel security charter: dual-architecture Stage 0
 
-## Do not infer sandboxing from bare-metal execution
+## Present boundary
 
-This build has **no secure user-process isolation**. It is a privileged firmware
-handoff experiment. The C code has privileged CPU access and inherits
-firmware-created memory mappings. It must not load or execute third-party code.
-A separate ELF/PE/WASM loader and safe tooling environment are intentionally
-NOT included until later gates.
+The kernel has no secure user-process isolation. It is a privileged UEFI handoff experiment using firmware-created page tables and early serial/framebuffer access. It must not load or execute untrusted third-party code. Native binary compatibility, a task scheduler, capability enforcement, independent exception handling, IOMMU policy and safe tooling are not implemented.
 
-## Trust model
+The firmware, ACPI pointers and initial page tables are trusted inputs. ARM64 SPCR metadata is bounded/checksummed and restricted to known UART types, but that does not make malicious firmware safe. The QEMU-only PL011 fallback must not be used as an arbitrary-board hardware address. MMIO mappings and cache/device attributes require validation for every real platform.
 
-- The device firmware, its ACPI tables and its initial page tables are trusted
-  inputs at Stage 0; malicious firmware is outside current protection.
-- ARM64 ACPI SPCR is checksum-validated, bounded in length and constrained to
-  known UART interface types. These checks improve robustness but do not turn
-  firmware data into a fully untrusted-memory-safe interface.
-- x86-64 COM1 and ARM64 PL011/SBSA console are early diagnostics only.
-  ARM64's MMIO access assumes the relevant firmware mapping remains valid
-  after `ExitBootServices`, which must be tested for each supported platform.
-- Signed boot media, kernel image signature checks, IOMMU isolation,
-  authentication, user authorization and permission enforcement are FUTURE WORK.
+## Runtime evidence now available
 
-## Required later invariants
+Public CI run 40170633060 at commit 10272c09f668cd528b182b5f912dd369b823a2c5 successfully executed:
 
-1. Ring 3 (x86-64) / EL0 (AArch64) separation from the supervisor kernel.
-2. CPU page tables deny ungranted memory; W^X execution policy where supported.
-3. Bounds-validated IPC and revocable unforgeable resource handles.
-4. Drivers and external runtimes kept out of privileged kernel address space.
-5. Explicit per-tool CPU/memory/time/I/O/resource budgets.
-6. Verified package/boot signatures, rollback protections and recoverability.
-7. Per-architecture exception/fault and DMA isolation tests.
-8. Never silently weaken required isolation when a hardware feature is missing.
+- x86-64 QEMU q35/qemu64 with OVMF: actual firmware handoff, serial commands and valid architecture-specific @LU1 response.
+- AArch64 QEMU virt/cortex-a57 with AAVMF: actual EL1 entry, serial commands and valid @LU1 response using the explicit emulator UART profile.
 
-## Stage 0 tests done
+Both executions reported isolation and native-tool execution as false. This supersedes original static-only staging status; it does not establish generic ARM64-image boot, physical hardware safety, independent MMU control or a working sandbox. The generic ARM64 UEFI image is cross-built and statically checked, not the runtime-tested emulator profile. Visual framebuffer behavior and headset interaction are separate tests.
 
-- Cross-compile x86-64 and AArch64 as freestanding UEFI PE32+.
-- Validate PE headers, entrypoints and relocation directory.
-- Validate GPT primary/backup checksums, dual ESP boot files and FAT32 chains.
-- Run host sanitizer unit tests exercising valid and invalid ACPI SPCR metadata.
-- Check deterministic outputs from repeated builds.
+## Implemented checks versus unproven properties
 
-## Stage 0 tests NOT done
+Compilation and PE/GPT/FAT integrity checks cover all built images. Host ASan/UBSan tests cover the ACPI/SPCR parser and shared C observation formatter. Actual serial logs are retained as CI evidence; authored fixtures cannot satisfy the boot gate. These checks do not prove C memory safety, absence of privilege bugs or universal hardware support.
 
-- No QEMU/OVMF or physical firmware boot execution has been completed here.
-- No coverage of actual ARM hardware MMIO mappings or GOP.
-- No independent MMU/page-table ownership or exception vectors.
-- No isolation, hardware access controls or execution of untrusted programs.
+## Mandatory later invariants
+
+1. Separate ring 3 / EL0 programs from the supervisor address space.
+2. Enforce page permissions, execute-never/W^X policy and safe sharing.
+3. Validate pointer ranges, arithmetic, message lengths and capability generations.
+4. Keep third-party runtimes and most complex services outside kernel memory.
+5. Enforce time, CPU, memory, I/O and process budgets below the UI.
+6. Verify packages and boot/update chains with recoverable, authenticated state.
+7. Test privilege misuse, malformed IPC, crashes and DMA boundaries per architecture.
+8. Refuse unsupported isolation requirements instead of silently weakening them.
+
+The current images are unsigned development builds. Begin in QEMU; never flash a production disk or disable platform protections based on an assumption that bare-metal C implies security.

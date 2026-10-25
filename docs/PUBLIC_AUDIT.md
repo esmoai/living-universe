@@ -1,24 +1,27 @@
-# Public-release audit — 2026-10-25
+# Public source and delivery audit
 
-## Publication policy
+## Scope and provenance
 
-The repository was assembled using a **file allowlist**, not by uploading a 14 MiB private backup and hoping `.gitignore` would conceal its contents. The original user ZIPs, image/firmware disk artifacts, local log captures, exported workspace data, compiled Windows/Linux tools and private development notes are not tracked. The source tree is small, contains no git submodules or credential files, and has no untracked deployment backend required by the public demo.
+The public source was assembled from an explicit allowlist, not by dumping private backup ZIPs into Git history. All three supplied archives were inventoried; [File coverage](FILE_COVERAGE.md) records their identities and dispositions. No runtime source was missing. Original reference media, chat notes, authoring host settings, nested backups and personal workspaces are not public runtime dependencies.
 
-## Source and third-party material
+Editable visual sources, the retained hash-checked production runtime, native C observer, both kernel architecture ports, tests, licenses and documentation are present. Original third-party terms are preserved. The license covers project code with publication authorization, not ownership of arbitrary third-party material. Automated scans are not legal clearance or proof that unknown secrets cannot exist.
 
-The standalone site is built from a hash-checked existing Source / Destination runtime plus six local JS modules. It retains the bundled third-party notices and publishes the original editable source. The static demo lives in `docs/index.html`, and an offline build regenerates identical bytes. This is not a claim that all original Three.js/WebXR paths were runtime-tested. The included license applies to code contributors own; externally sourced material retains its original notice/license.
+## Repair from source-only publication
 
-## Automated checks performed during staging
+The initial main CI failed because its runner lacked lld-link. The repair explicitly installs and selects Clang/LLVM, synchronizes all standalone HTML outputs and creates complete release kits. Generated Windows/Linux tools, three EFI executables and four disk images are included in release downloads rather than Git history. Packaging rejects missing required artifacts and includes a file hash inventory.
 
-- Scanned textual, generated HTML and bundled JavaScript for high-confidence GitHub, AWS, OpenAI, Google, private-PEM and bearer-token patterns; none matched. Reviewed project-owned text for employer/project-internal names and personal account paths; none matched. This is not a guarantee of no unknown secrets.
-- Offline static HTML regenerated and matched `web/index.html` and `docs/index.html` byte-for-byte.
-- 34 source/model unit tests passed; 123 real Linux hosted C loopback tests passed; 12 host telemetry/parser checks passed; ARM64 ACPI/SPCR host test passed.
-- Compiled native x86-64, ARM64 and ARM64-QEMU UEFI binaries and verified generated GPT/FAT images and their SHA-256 checksums. **No actual firmware boot was conducted here.**
-- 42 Playwright browser checks passed on the Canvas2D fallback; zero uncaught browser script exceptions. WebGL2, headset hardware and native Windows execution were not tested.
-- Git tracked-file safety gate rejects large or forbidden artifacts and known secret formats. GitHub Actions default permission is read-only and action versions are pinned to commit hashes.
+The publication pipeline now runs actual x86-64 and AArch64 QEMU firmware tests, a real Windows EXE smoke test, full editable-source tests/build, model tests and native API checks before releasing. Read-only jobs have no publishing authority; deployment/release rights are scoped to dedicated jobs. Existing versioned releases are not overwritten by the workflow. This policy is not a claim that GitHub's optional immutable-release administrative setting is enabled.
 
-## Risks left open
+## Verified public milestone
 
-Third-party upstream licenses should be rechecked before additional distribution or importing new assets. The hosted observer is not an OS sandbox. The pre-alpha kernel lacks memory isolation, drivers and any arbitrary tool executor. A new public repository needs additional GitHub settings: branch protection, private vulnerability reporting, appropriate contributor approval and Pages branch configuration. No person should interpret publication as production security validation.
+[Run 40170633060](https://github.com/esmoai/living-universe/actions/runs/40170633060), commit 10272c09f668cd528b182b5f912dd369b823a2c5, passed every source/native/release job and published v0.3.1-prealpha. The Windows smoke test explicitly preserved CRLF bytes. Both QEMU tests used actual firmware and commands, not substituted fixtures. Physical machines, generic ARM board boot, WebGL/headsets and kernel isolation remain outside this verified milestone.
 
-This document is a reproducible preparation record, not a legal opinion or external security certification.
+Earlier 34-model / 123-native / 42-Canvas2D local counts describe the original staging environment, not new hardware certification. Current CI and its exact commit are authoritative for a release. The v0.3.2 refresh corrects inherited status wording after the public runtime milestone.
+
+## Website remains a separate deployment
+
+The static Pages build passes and stages only public HTML, notices, sample bytes and status metadata. The last deployment check failed because the repository had no enabled Pages site. Owner activation at Settings > Pages > Source > GitHub Actions remains necessary. A successful deploy job and matching public status.json are required before claiming the website is live. No native service is deployed to the public site.
+
+## Remaining owner safeguards
+
+Review private vulnerability reporting, branch rules, outside-contributor approvals and dependency changes. These settings are not claimed enabled without evidence. Do not treat a green build, public source, cryptographic checksum or unsigned pre-alpha download as a production security guarantee.
