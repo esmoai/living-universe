@@ -1,0 +1,3 @@
+# LU_TEST_FIXTURE - authored examples, NOT actual QEMU boot output
+@LU1 {"v":1,"source":"c-native-kernel","event":"boot.snapshot","stage":0,"sequence":1,"firmware_exited":true,"user_space_isolation":false,"native_tool_execution":false,"conventional_pages":4113,"memory_map_bytes":120,"descriptor_size":40,"arch":"x86-64"}
+@LU1 {"v":1,"source":"c-native-kernel","event":"boot.snapshot","stage":0,"sequence":1,"firmware_exited":true,"user_space_isolation":false,"native_tool_execution":false,"conventional_pages":4113,"memory_map_bytes":120,"descriptor_size":40,"arch":"AArch64"}

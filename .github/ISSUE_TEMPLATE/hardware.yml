@@ -1,0 +1,29 @@
+name: Hardware compatibility report
+description: Confirmed test or compatibility investigation
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include device serial numbers, private keys or internal network details."
+  - type: input
+    id: target
+    attributes:
+      label: CPU and board model
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware and version
+  - type: dropdown
+    id: evidence
+    attributes:
+      label: Evidence type
+      options: [Actual physical boot, Actual QEMU firmware boot, Build-only, Host-only unit test, Not yet tested]
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Commands and observed results
+    validations:
+      required: true

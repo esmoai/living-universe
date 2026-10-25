@@ -1,0 +1,22 @@
+LIBRARY kernel32.dll
+EXPORTS
+GetStdHandle
+WriteFile
+GetProcessHeap
+HeapAlloc
+HeapFree
+GetTickCount64
+GetCurrentProcess
+GetProcessTimes
+CreateFileW
+ReadFile
+SetFilePointerEx
+GetFileSizeEx
+GetFileType
+GetFileInformationByHandle
+CloseHandle
+MultiByteToWideChar
+WideCharToMultiByte
+GetCommandLineW
+LocalFree
+ExitProcess

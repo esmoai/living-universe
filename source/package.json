@@ -1,0 +1,20 @@
+{
+  "name": "living-universe-source-destination",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test tests/*.test.js",
+    "portable": "node scripts/package-portable.mjs",
+    "test:universe": "node --test tests/data.test.js tests/universe.test.js"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "vite": "7.3.7"
+  }
+}

@@ -1,0 +1,110 @@
+/* Living Universe: optional, floating instruments; the field remains primary. */
+:root { --lu-line:rgba(184,218,229,.16); --lu-text:#e4eeef; --lu-muted:#a0b0bd; --lu-mint:#7affdb; --lu-violet:#b899ff; }
+.wordmark { opacity:.8 !important; }
+.wordmark small { color:#9daab4 !important; }
+.identity { opacity:1 !important; }
+.lu-tools { position:fixed; top:28px; right:32px; display:flex; align-items:center; gap:9px; z-index:35; }
+.lu-button { appearance:none; font:inherit; color:var(--lu-text); border:1px solid var(--lu-line); border-radius:12px; padding:10px 13px; background:rgba(14,19,24,.88); cursor:pointer; transition:border-color .16s,background .16s; min-height:40px; }
+.lu-button:hover { background:#18232a; border-color:#689b96; }
+.lu-button.primary { color:#baffed; border-color:rgba(122,255,219,.4); background:rgba(50,115,99,.15); }
+.lu-button.danger { color:#ffafbf; }
+.lu-button.small { min-height:32px; padding:6px 10px; font-size:12px; }
+.lu-button:disabled { opacity:.4; cursor:not-allowed; }
+.lu-button[aria-pressed=true] { border-color:var(--lu-mint); color:var(--lu-mint); }
+.lu-button:focus-visible, .lu-panel input:focus-visible, .lu-panel select:focus-visible, .lu-panel textarea:focus-visible, .lu-object:focus-visible { outline:2px solid #a4ffe2; outline-offset:3px; }
+.lu-state { position:fixed; left:32px; bottom:33px; z-index:30; font-size:11px; letter-spacing:.06em; color:#aebcc8; padding:10px 13px; border:1px solid rgba(165,199,220,.13); border-radius:99px; background:rgba(9,14,18,.8); cursor:pointer; }
+.lu-state::before { content:''; display:inline-block; width:6px; height:6px; margin-right:9px; border-radius:50%; background:#b997ff; }
+.lu-state[data-recall=true]::before { background:#ffd586; }
+.lu-tag { display:inline-flex; align-items:center; border:1px solid var(--lu-line); border-radius:6px; padding:3px 6px; font:10px/1.2 ui-monospace,monospace; text-transform:uppercase; letter-spacing:.04em; color:#c7b1ff; }
+.lu-tag[data-quality=observed] { color:#84fbd2; }
+.lu-tag[data-quality=reported] { color:#ffe59f; }
+.lu-tag[data-quality=imported] { color:#8eceff; }
+.lu-tag[data-quality=derived] { color:#ffafe3; }
+.lu-panel { position:fixed; z-index:60; color:var(--lu-text); background:linear-gradient(145deg,rgba(18,25,32,.96),rgba(7,12,18,.96)); border:1px solid var(--lu-line); border-radius:20px; box-shadow:0 24px 100px #0009, inset 0 1px 0 #ffffff08; backdrop-filter:blur(20px); width:330px; min-width:290px; min-height:260px; max-width:calc(100vw - 24px); max-height:calc(100dvh - 110px); overflow:hidden; resize:both; display:flex; flex-direction:column; font-family:system-ui,-apple-system,'Segoe UI',sans-serif; font-size:13px; line-height:1.5; }
+.lu-panel[hidden], .lu-panel [hidden] { display:none !important; }
+#lu-field-panel { left:26px; top:100px; height:650px; }
+#lu-inspector { right:26px; top:100px; width:388px; height:680px; }
+.lu-panel-head { padding:15px 16px 12px; display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--lu-line); flex:none; }
+.lu-drag { border:0; background:none; color:#8aa3ac; cursor:grab; padding:4px; touch-action:none; letter-spacing:-2px; font-size:15px; }
+.lu-panel-title { flex:1; min-width:0; }
+.lu-panel-title strong { display:block; font-size:14px; font-weight:550; letter-spacing:.015em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lu-kicker { font:10px/1.5 ui-monospace,monospace; letter-spacing:.14em; color:var(--lu-mint); text-transform:uppercase; }
+.lu-close { border:0; color:#b9cbd0; background:transparent; font-size:22px; width:30px; height:30px; border-radius:50%; cursor:pointer; }
+.lu-close:hover { background:#ffffff12; }
+.lu-tabs { display:flex; padding:6px 12px 0; gap:2px; border-bottom:1px solid var(--lu-line); flex:none; }
+.lu-tab { flex:1; border:none; border-bottom:2px solid transparent; background:none; color:var(--lu-muted); padding:10px 3px; cursor:pointer; font:12px system-ui,sans-serif; }
+.lu-tab[aria-selected=true] { color:var(--lu-mint); border-bottom-color:var(--lu-mint); }
+.lu-scroll { padding:15px 16px; overflow:auto; overscroll-behavior:contain; flex:1; scrollbar-width:thin; scrollbar-color:#374550 transparent; }
+.lu-scroll::-webkit-scrollbar { width:5px; }
+.lu-scroll::-webkit-scrollbar-thumb { background:#374550; border-radius:10px; }
+.lu-panel p { margin:0 0 12px; color:var(--lu-muted); font-size:12px; }
+.lu-panel h2 { margin:0 0 10px; font-size:17px; font-weight:500; color:#eefaf6; letter-spacing:-.02em; }
+.lu-panel h3 { margin:20px 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:.11em; color:#b3c3cd; }
+.lu-panel label { display:block; margin:12px 0 5px; color:#bccbd4; font-size:11px; }
+.lu-panel input:not([type=range]):not([type=checkbox]), .lu-panel textarea, .lu-panel select { box-sizing:border-box; background:rgba(0,0,0,.32); border:1px solid var(--lu-line); border-radius:9px; color:var(--lu-text); width:100%; min-height:38px; padding:8px 10px; font:12px system-ui,sans-serif; }
+.lu-panel select option { background:#131b24; color:#ebf5f3; }
+.lu-panel textarea { resize:vertical; min-height:80px; }
+.lu-row { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:10px 0; }
+.lu-row > .lu-button { flex:1; white-space:nowrap; }
+.lu-meta { color:var(--lu-muted); font:11px/1.6 ui-monospace,monospace; overflow-wrap:anywhere; }
+.lu-rule { height:1px; background:var(--lu-line); margin:16px 0; }
+.lu-callout { border-left:2px solid #87b7bf; padding:9px 12px; background:#91d9e909; border-radius:0 8px 8px 0; font-size:11px; color:#b4cbd1; margin:13px 0; }
+.lu-callout.warn { border-color:#e3bc78; color:#e9d1a5; background:#e3bc7809; }
+.lu-channels { display:grid; grid-template-columns:repeat(6,1fr); gap:5px; margin:10px 0; }
+.lu-channel { border:1px solid var(--lu-line); background:#ffffff04; border-radius:7px; height:28px; cursor:pointer; font:10px ui-monospace,monospace; color:#b8c4d0; }
+.lu-channel span { display:inline-block; width:5px; height:5px; border-radius:50%; margin-right:4px; background:var(--channel); }
+.lu-channel[aria-pressed=true] { border-color:var(--channel); background:#ffffff11; }
+.lu-count { display:flex; justify-content:space-between; color:#8ea2af; font:10px ui-monospace,monospace; text-transform:uppercase; letter-spacing:.04em; margin:14px 0 8px; }
+.lu-object { width:100%; text-align:left; display:flex; gap:10px; align-items:center; border:1px solid transparent; padding:10px 6px; color:#dae8ec; background:none; cursor:pointer; border-radius:10px; }
+.lu-object:hover { background:#a5e6ff09; }
+.lu-object[aria-pressed=true] { border-color:#6db2a84f; background:#80edcb08; }
+.lu-object-dot { width:9px; height:9px; background:var(--channel); box-shadow:0 0 14px color-mix(in srgb,var(--channel),transparent 60%); border-radius:3px; transform:rotate(45deg); flex:none; }
+.lu-object-copy { flex:1; min-width:0; }
+.lu-object-copy strong { display:block; font-size:12px; font-weight:450; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+.lu-object-copy small { color:#90a4b4; font:10px ui-monospace,monospace; }
+.lu-tree { margin-top:10px; }
+.lu-atom { width:100%; display:block; border:1px solid transparent; border-left:1px solid #2c414e; padding:6px 8px; margin:2px 0; color:#d4e6e7; text-align:left; background:transparent; border-radius:0 6px 6px 0; cursor:pointer; font:11px/1.5 ui-monospace,monospace; overflow-wrap:anywhere; }
+.lu-atom:hover,.lu-atom[aria-pressed=true] { border-left-color:var(--lu-mint); background:#7affdb0b; }
+.lu-atom .lu-path { color:#8aabba; display:block; font-size:10px; }
+.lu-atom .lu-value { color:#c4eadf; display:block; max-height:75px; overflow:hidden; }
+.lu-id { font:10px/1.6 ui-monospace,monospace; color:#8194a7; overflow-wrap:anywhere; }
+.lu-hex { display:grid; grid-template-columns:repeat(8,1fr); gap:3px; margin:10px 0; }
+.lu-byte { border:1px solid transparent; border-radius:4px; padding:5px 0; color:#b8d3d7; background:#8cf8d906; font:11px ui-monospace,monospace; cursor:pointer; }
+.lu-byte[aria-pressed=true] { color:#091513; background:#91ffe2; }
+.lu-bits { display:grid; grid-template-columns:repeat(8,1fr); gap:5px; margin:10px 0; }
+.lu-bit { border:1px solid #72b6b2; border-radius:5px; padding:8px 0; color:#8df9e0; background:#75ffe60b; cursor:pointer; font:14px ui-monospace,monospace; }
+.lu-bit[data-value="0"] { color:#b49bff; border-color:#65568b; background:#b49bff09; }
+.lu-bit[aria-pressed=true] { outline:2px solid #ffe3a7; outline-offset:2px; }
+.lu-lens { display:block; width:100%; height:auto; aspect-ratio:1/.68; background:radial-gradient(ellipse at center,#152028 0,transparent 68%); cursor:grab; touch-action:none; border:1px solid var(--lu-line); border-radius:12px; }
+.lu-range { width:100%; accent-color:var(--lu-mint); }
+.lu-event { display:block; width:100%; text-align:left; background:none; color:#dbe9ed; border:0; border-left:1px solid #304951; padding:10px 12px; font:12px system-ui,sans-serif; cursor:pointer; }
+.lu-event:hover,.lu-event[aria-current=true] { border-left:2px solid var(--lu-mint); background:#a4ffde07; }
+.lu-event small { color:#8fa9b6; display:block; font:10px/1.7 ui-monospace,monospace; }
+.lu-recall-ribbon { position:fixed; top:30px; left:50%; transform:translateX(-50%); z-index:50; background:#241b0fee; border:1px solid #e6b97055; color:#ffe2ae; padding:8px 15px; border-radius:99px; font:11px system-ui,sans-serif; }
+.lu-recall-ribbon[hidden] { display:none; }
+.lu-diagnostic { border-bottom:1px solid var(--lu-line); padding:10px 0; }
+.lu-diagnostic strong { font-size:12px; color:#c7eadf; font-weight:500; }
+.lu-diagnostic[data-ok=false] strong { color:#f7d79e; }
+.lu-diagnostic p { margin:3px 0 0; font-size:11px; }
+.lu-welcome { position:fixed; top:84px; right:32px; width:250px; padding:18px; z-index:40; background:#0c141de8; border:1px solid var(--lu-line); border-radius:16px; color:#dde9ee; font:12px/1.6 system-ui,sans-serif; }
+.lu-welcome strong { display:block; margin-bottom:6px; color:#beffe9; font-size:14px; font-weight:500; }
+.lu-welcome p { color:#98abb9; margin:0 0 12px; }
+.lu-welcome[hidden] { display:none; }
+.controls-hidden .lu-tools,.controls-hidden .lu-state,.controls-hidden .lu-welcome { opacity:0; pointer-events:none; }
+.in-vr .lu-tools,.in-vr .lu-state,.in-vr .lu-panel,.in-vr .lu-welcome,.in-vr .lu-recall-ribbon { display:none !important; }
+.graphics-unavailable .lu-tools { z-index:100; }
+.graphics-unavailable #loading { pointer-events:none; }
+.graphics-unavailable #loading button { pointer-events:auto; }
+.quiet .entry-controls,.quiet .utility-controls { opacity:.4 !important; }
+@media(max-width:760px) {
+ .lu-tools { top:20px; right:14px; }
+ .lu-tools .lu-button { font-size:11px; padding:8px 10px; }
+ .lu-state { left:14px; bottom:90px; font-size:9px; }
+ .lu-panel,#lu-field-panel,#lu-inspector { left:12px !important; right:12px !important; top:78px !important; width:calc(100vw - 24px) !important; min-width:0; max-height:calc(100dvh - 96px); height:calc(100dvh - 100px); resize:none; }
+ .lu-drag { display:none; }
+ .lu-welcome { right:14px; top:76px; width:230px; }
+ .lu-recall-ribbon { top:auto; bottom:16px; white-space:nowrap; }
+ .wordmark { display:none; }
+ #lu-inspector { z-index:70; }
+}
+@media(prefers-reduced-motion:reduce) { .lu-button { transition:none; } }

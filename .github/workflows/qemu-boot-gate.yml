@@ -1,0 +1,21 @@
+name: Manual dual-architecture firmware boot gate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qemu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install QEMU and UEFI firmware for actual emulator execution
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-system-x86 qemu-system-arm ovmf qemu-efi-aarch64
+      - name: Compile x86-64 and AArch64 kernels
+        run: sh kernel/scripts/build.sh
+      - name: Run BOTH actual firmware gates (no network, no host disk)
+        run: sh kernel/scripts/test_qemu.sh --arch both

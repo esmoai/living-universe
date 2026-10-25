@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+"""Interaction regression in an injected local document.
+This avoids managed-browser navigation restrictions without changing policy.
+It does NOT validate a file:// navigation, HTTP navigation, or a VR headset.
+Requires externally installed Playwright + Chromium; never installs packages.
+"""
+import json,os,shutil
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+ROOT=Path(__file__).resolve().parent.parent
+checks=[];errors=[];requests=[]
+def check(name,ok):
+ checks.append({'name':name,'passed':bool(ok)})
+ if not ok:raise AssertionError(name)
+with sync_playwright() as p:
+ browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM',shutil.which('chromium') or '/usr/bin/chromium'),headless=True,args=['--no-sandbox','--disable-dev-shm-usage'])
+ page=browser.new_page(viewport={'width':1600,'height':1000},device_scale_factor=1)
+ page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:requests.append(r.url));page.on('dialog',lambda d:d.accept())
+ page.set_content((ROOT/'LivingUniverse.html').read_text(),wait_until='load')
+ page.wait_for_function('!!window.livingUniverse');page.wait_for_timeout(800)
+ mode=page.evaluate('window.SourceDestination.experience ? "WebGL" : "Canvas2D fallback"')
+ check('all 72 source records present',page.evaluate('livingUniverse.store.packets.length')==72)
+ check('no record pretends initial live evidence',page.evaluate('livingUniverse.store.packets.every(p=>p.quality==="simulated")'))
+ check('main canvas available',page.locator('#world canvas').count()==1)
+ check('instrument cards hidden on landing',page.locator('#lu-field-panel').is_hidden() and page.locator('#lu-inspector').is_hidden())
+ page.screenshot(path=str(ROOT/'validation/01-landing.png'))
+ page.locator('#lu-begin').click();page.locator('#lu-reveal').click()
+ check('reveal toggles actual field',page.evaluate('livingUniverse.field.enabled===true'))
+ check('core chamber shows 36 original records',page.locator('.lu-object').count()==36)
+ check('12 channel controls',page.locator('.lu-channel').count()==12)
+ page.locator('[data-channel="1"]').click();check('channel filter shows exactly 3 core objects',page.locator('.lu-object').count()==3)
+ page.locator('#lu-clear-filter').click();page.locator('#lu-chamber').select_option('all');check('all-chambers filter',page.locator('.lu-object').count()==72)
+ page.locator('#lu-search').fill('unfindable-across-all-records');check('search emptiness is explicit',page.locator('.lu-object').count()==0)
+ page.locator('#lu-search').fill('');page.locator('#lu-chamber').select_option('core');page.locator('.lu-object').first.click()
+ check('select opens inspector',page.locator('#lu-inspector').is_visible())
+ page.screenshot(path=str(ROOT/'validation/02-inspection.png'))
+ page.locator('[data-inspect="bits"]').click();check('8 accessible bit controls',page.locator('.lu-bit').count()==8)
+ check('simulated JSON never described as process memory', 'not process memory' in page.locator('#lu-detail').inner_text())
+ page.screenshot(path=str(ROOT/'validation/03-bit-lens.png'))
+ # Exercise the real file input with an explicit selected test file.
+ page.locator('#lu-file').set_input_files({'name':'precision.bin','mimeType':'application/octet-stream','buffer':bytes([0x81,0x42,0,255,128,65])})
+ page.wait_for_function('livingUniverse.store.packets.some(p=>p.name==="precision.bin")')
+ page.wait_for_timeout(150)
+ check('file input preserves every original byte',page.evaluate('JSON.stringify([...livingUniverse.store.bytesFor(livingUniverse.store.packets.find(p=>p.name==="precision.bin")).bytes])')=='[129,66,0,255,128,65]')
+ check('bit view labels original bytes','Original selected-file bytes' in page.locator('#lu-detail').inner_text())
+ check('first byte MSB first 10000001',page.locator('.lu-bit').all_text_contents()==list('10000001'))
+ page.locator('.lu-byte[data-offset="1"]').click();check('second byte exact 01000010',page.locator('.lu-bit').all_text_contents()==list('01000010'))
+ page.locator('.lu-bit').nth(1).click();check('selected bit readout is exact','bit 6 = 1' in page.locator('#lu-bit-readout').inner_text())
+ page.locator('[data-inspect="handle"]').click();page.locator('#lu-note').fill('<img src=x onerror="window.luInjected=true"> local annotation')
+ page.get_by_role('button',name='Save note',exact=True).click();page.wait_for_timeout(100)
+ check('annotation saved as plain text',page.evaluate('livingUniverse.store.packets.find(p=>p.name==="precision.bin").note.startsWith("<img")'))
+ check('untrusted annotation never executed',page.evaluate('window.luInjected !== true') and page.locator('#lu-detail img').count()==0)
+ page.get_by_role('button',name='Pin object',exact=True).click();page.wait_for_timeout(100)
+ check('pin is real workspace state',page.evaluate('livingUniverse.store.packets.find(p=>p.name==="precision.bin").pinned'))
+ page.locator('#lu-destination').select_option('tools');page.get_by_role('button',name='Move local record',exact=True).click();page.wait_for_timeout(100)
+ check('move affects local destination',page.evaluate('livingUniverse.store.packets.find(p=>p.name==="precision.bin").node')=='tools')
+ page.locator('[data-pane="recall"]').click();page.locator('#lu-undo').click();page.wait_for_timeout(100)
+ check('undo restores prior chamber',page.evaluate('livingUniverse.store.packets.find(p=>p.name==="precision.bin").node')=='core')
+ page.locator('#lu-redo').click();page.wait_for_timeout(100)
+ check('redo restores local move',page.evaluate('livingUniverse.store.packets.find(p=>p.name==="precision.bin").node')=='tools')
+ # Latest recorded frame remains read-only, even though its values equal present.
+ page.locator('#lu-events .lu-event').first.click();page.wait_for_timeout(100)
+ check('recall mode explicit',page.evaluate('livingUniverse.store.isRecall') and page.locator('#lu-recall-ribbon').is_visible())
+ check('recall disables mutation controls',page.get_by_role('button',name='Save note',exact=True).is_disabled())
+ check('model rejects mutation during recall',page.evaluate('(()=>{try{livingUniverse.store.snapshot();return false}catch(e){return /read-only/.test(e.message)}})()'))
+ page.screenshot(path=str(ROOT/'validation/04-recall.png'))
+ page.locator('#lu-return').click();page.wait_for_timeout(100);check('return to editable present',not page.evaluate('livingUniverse.store.isRecall'))
+ page.locator('[data-pane="connect"]').click();page.locator('#lu-observe').click();page.wait_for_timeout(150)
+ check('opt-in observations from actual renderer',page.evaluate('livingUniverse.store.packets.some(p=>p.quality==="observed" && /renderer/.test(p.source))'))
+ page.locator('#lu-observe').click();check('observations stop on request',page.locator('#lu-observe').get_attribute('aria-pressed')=='false')
+ archive=page.evaluate('livingUniverse.exportWorkspace()');obj=json.loads(archive)
+ check('portable workspace has history and original bytes',len(obj['frames'])>=6 and len(obj['blobs'])==1)
+ check('export has no bridge key or executable authority',obj['authority']=='none; workspace data only' and 'X-Universe-Key' not in archive)
+ page.evaluate('(text)=>livingUniverse.store.importWorkspace(text)',archive);page.wait_for_timeout(150)
+ check('workspace restore preserves original bytes',page.evaluate('livingUniverse.store.bytesFor(livingUniverse.store.packets.find(p=>p.name==="precision.bin")).bytes[0]')==129)
+ check('restored observations marked recorded',page.evaluate('livingUniverse.store.packets.filter(p=>p.quality==="observed").every(p=>p.provenance.recorded)'))
+ # Accessible grip and tab interaction.
+ grip=page.locator('#lu-field-panel .lu-drag');before=page.locator('#lu-field-panel').bounding_box()['x'];grip.focus();page.keyboard.press('ArrowRight');after=page.locator('#lu-field-panel').bounding_box()['x'];check('keyboard card movement',after>before)
+ page.locator('#lu-tab-field').focus();page.keyboard.press('ArrowRight');check('arrow-key tab navigation',page.locator('#lu-tab-recall').get_attribute('aria-selected')=='true')
+ page.locator('[data-pane="care"]').click();page.locator('#lu-light').click();check('lighter rendering control',page.locator('#quality').input_value()=='low')
+ page.locator('#lu-layout-reset').click();check('layout reset restores positioning',page.locator('#lu-field-panel').evaluate('(p)=>p.style.left===""'))
+ page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(350)
+ page.locator('[data-close="lu-inspector"]').click();page.screenshot(path=str(ROOT/'validation/05-mobile.png'))
+ check('mobile document has no horizontal overflow',page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
+ card=page.locator('#lu-field-panel').bounding_box();check('mobile card fits viewport',card['x']>=0 and card['width']<=390)
+ check('no external network requests',len([u for u in requests if not u.startswith(('data:','blob:','about:'))])==0)
+ check('zero uncaught JavaScript exceptions',not errors)
+ report={'checks':len(checks),'passed':sum(x['passed'] for x in checks),'renderer_exercised':mode,'scope':'Playwright in locally injected document; real file input, interaction and serialization; not navigation, HTTP-browser hookup or VR headset validation','browser':browser.version,'errors':errors,'requests':requests,'results':checks}
+ (ROOT/'validation/browser-tests.json').write_text(json.dumps(report,indent=2)+'\n')
+ print(f'PASS: {len(checks)} browser checks; renderer={mode}; zero page errors.')
+ browser.close()

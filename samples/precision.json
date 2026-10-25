@@ -1,0 +1,7 @@
+{
+  "example": "Authored local inspection sample, not live telemetry",
+  "message": "Preserve the original bytes, then inspect their meaning.",
+  "enabled": false,
+  "nested": { "count": 7, "values": [0, 1, 255] },
+  "nullValue": null
+}

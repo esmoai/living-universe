@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Enter a living fluorescent data field. Explore its open cube, flowing coalescence, and three traversable wormholes in 3D and VR." />
+  <title>Source / Destination — The Living Field</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='black'/%3E%3Cg fill='none' stroke='%2359ffe4' stroke-width='1.5'%3E%3Cpath d='M20 4 5 13v17l15 8 15-8V13L20 4v17L5 30m15-9 15 9M5 13l15 8 15-8'/%3E%3Ccircle cx='20' cy='22' r='8' stroke='%23ff59e7'/%3E%3C/g%3E%3C/svg%3E" />
+</head>
+<body data-mode="orbit">
+  <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-enter" viewBox="0 0 24 24"><path d="M5 12h13m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m4 10 8-6 8 6v9H4V10Z"/><path d="M9 19v-6h6v6"/></symbol>
+    <symbol id="i-vr" viewBox="0 0 24 24"><path d="M5 6h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-4l-3-3-3 3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="7.5" cy="11" r="1.5"/><circle cx="16.5" cy="11" r="1.5"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 6v12M16 6v12"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 10 7-10 7V5Z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m6 0h5v-5"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5m-5 5 5-5 5 5"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14m-5-5 5 5 5-5"/></symbol>
+  </defs></svg>
+  <main id="world" aria-label="The living field, an interactive three-dimensional data sculpture"></main>
+  <div id="loading" role="status" aria-live="polite"><span class="loading-orbit" aria-hidden="true"></span><span>Forming the field</span></div>
+  <header class="identity chrome">
+    <button id="open-menu" class="field-mark" aria-label="Open exploration controls" aria-haspopup="dialog" title="Explore and adjust · H">
+      <svg width="34" height="38" viewBox="0 0 40 44" fill="none" aria-hidden="true"><defs><linearGradient id="mark-spectrum" x1="2" y1="4" x2="37" y2="39" gradientUnits="userSpaceOnUse"><stop stop-color="#65ffe8"/><stop offset=".36" stop-color="#a77dff"/><stop offset=".68" stop-color="#ff66dd"/><stop offset="1" stop-color="#fff16f"/></linearGradient></defs><path d="m20 3-16 9v19l16 10 16-10V12L20 3v19L4 31m16-9 16 9M4 12l16 10 16-10" stroke="url(#mark-spectrum)" stroke-width="1.1"/><circle cx="20" cy="22" r="9.2" stroke="url(#mark-spectrum)" stroke-width="1"/><ellipse cx="20" cy="22" rx="4" ry="9.2" stroke="url(#mark-spectrum)" stroke-width=".7"/></svg>
+    </button>
+    <div class="wordmark"><span>Source / Destination</span><small>The living field</small></div>
+  </header>
+  <div id="node-label" class="node-label" aria-hidden="true"><span id="node-name"></span><small id="node-subtitle"></small></div>
+  <div id="journey" hidden><span class="journey-dot" aria-hidden="true"></span><span id="journey-name">Following the stream</span><div class="journey-track" role="progressbar" aria-label="Tunnel journey" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="journey-progress"></i></div></div>
+  <div id="hover-label" aria-hidden="true" hidden></div><div id="crosshair" aria-hidden="true" hidden><i></i></div><div id="notice" role="status" aria-live="polite"></div>
+  <div class="entry-controls chrome"><button id="enter" class="enter-button"><span id="enter-label">Enter the field</span><svg class="icon" aria-hidden="true"><use href="#i-enter"/></svg></button><button id="home" class="icon-button" aria-label="Return to reference view" title="Reference view · Home"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg></button></div>
+  <p id="hint" class="scene-hint chrome">Drag to orbit <b>·</b> Scroll to approach <b>·</b> Choose a portal</p>
+  <div class="utility-controls chrome"><button id="pause" class="icon-button" aria-label="Pause motion" aria-pressed="false" title="Pause motion · Space"><svg class="icon" aria-hidden="true"><use id="pause-icon" href="#i-pause"/></svg></button><button id="vr" class="vr-button" aria-label="Enter VR" title="Enter VR"><svg class="icon" aria-hidden="true"><use href="#i-vr"/></svg><span>VR</span></button></div>
+  <div id="touch-controls" aria-label="Flight controls"><div id="joystick" role="group" aria-label="Drag to move through the field"><span class="joystick-tick horizontal"></span><span class="joystick-tick vertical"></span><span id="joystick-thumb"></span></div><div class="elevation-controls"><button id="rise" class="icon-button" aria-label="Rise"><svg class="icon" aria-hidden="true"><use href="#i-up"/></svg></button><button id="descend" class="icon-button" aria-label="Descend"><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg></button></div></div>
+  <dialog id="field-menu" aria-labelledby="menu-title">
+    <div class="menu-top"><span class="eyebrow">Source / Destination</span><button id="close-menu" class="icon-button" aria-label="Close exploration controls"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <h1 id="menu-title">A living field.</h1><p class="menu-intro">Move closer. Step inside.<br>Follow a stream somewhere new.</p>
+    <section class="menu-section" aria-labelledby="portals-title"><h2 id="portals-title">Three ways through</h2><div class="portal-choices">
+      <button data-portal="rear-left" class="portal-choice"><span class="portal-number violet">01</span><span><strong>Xputty AI</strong><small>Rear-left portal</small></span><svg class="icon" aria-hidden="true"><use href="#i-enter"/></svg></button>
+      <button data-portal="rear-right" class="portal-choice"><span class="portal-number rose">02</span><span><strong>Collaboration</strong><small>Rear-right portal</small></span><svg class="icon" aria-hidden="true"><use href="#i-enter"/></svg></button>
+      <button data-portal="bottom" class="portal-choice"><span class="portal-number aqua">03</span><span><strong>Tools</strong><small>Floor portal</small></span><svg class="icon" aria-hidden="true"><use href="#i-enter"/></svg></button>
+    </div></section>
+    <section class="menu-section settings" aria-labelledby="feel-title"><h2 id="feel-title">Make it feel right</h2>
+      <div class="setting-row"><label for="quality">Detail</label><select id="quality"><option value="high">Vivid</option><option value="medium">Balanced</option><option value="low">Light</option></select></div>
+      <div class="setting-row"><span id="speed-label">Flow</span><div class="segmented" role="group" aria-labelledby="speed-label"><button data-speed="0.5" aria-pressed="false">½×</button><button data-speed="1" aria-pressed="true">1×</button><button data-speed="1.7" aria-pressed="false">1.7×</button></div></div>
+      <label class="comfort-row"><span><strong>Comfortable VR travel</strong><small>Fade between nodes. Turn off to ride the tunnel.</small></span><input id="comfort" type="checkbox" checked/><span class="switch" aria-hidden="true"></span></label>
+      <button id="fullscreen" class="fullscreen-button"><svg class="icon" aria-hidden="true"><use href="#i-expand"/></svg><span>Fill the screen</span><kbd>F</kbd></button>
+    </section>
+    <details class="control-details"><summary>How to explore <span>+</span></summary><div class="control-copy">
+      <p><strong>Outside</strong> Drag to orbit. Scroll or pinch to approach. Select a portal to travel; select the globe to enter.</p>
+      <p><strong>Inside</strong> Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to fly. <kbd>Q</kbd>/<kbd>E</kbd> down/up. Hold <kbd>Shift</kbd> to move faster. Touch: use the thumb pad and height arrows.</p>
+      <p><strong>Shortcuts</strong> <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> portals · <kbd>Home</kbd> reference view · <kbd>Enter</kbd> enter/return · <kbd>Esc</kbd> cancel travel · <kbd>Space</kbd> motion · <kbd>U</kbd> hide controls · <kbd>H</kbd> this menu.</p>
+      <p><strong>VR</strong> Point and trigger to enter or travel. Left stick moves. Right stick turns and changes height. <kbd>B</kbd>/<kbd>Y</kbd> returns home. Hand pinch selects on supported devices.</p>
+    </div></details>
+    <div class="vr-status"><span id="vr-indicator" aria-hidden="true"></span><p id="vr-status">Checking VR availability…</p></div>
+    <footer class="menu-footer">Procedural data field · simulated nodes<br>No live capability connections.</footer>
+  </dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

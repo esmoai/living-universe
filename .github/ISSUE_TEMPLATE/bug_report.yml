@@ -1,0 +1,32 @@
+name: Bug report
+description: Reproducible problem in Living Universe
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please remove private data and never paste session URLs or credentials."
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options: [Browser field, Canvas2D fallback, Hosted C observer, x86-64 kernel, ARM64 kernel, Build / CI, Documentation]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Include a minimal public fixture, not private logs.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, CPU, toolchain, firmware, browser and relevant versions.
+  - type: textarea
+    id: actual
+    attributes:
+      label: Expected and observed behavior
+    validations:
+      required: true

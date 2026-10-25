@@ -1,0 +1,9 @@
+.git
+source/node_modules
+source/dist
+source/portable
+validation
+kernel/build
+reference
+bin
+*.exe

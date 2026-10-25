@@ -1,0 +1,21 @@
+* text=auto
+*.c text eol=lf
+*.h text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.bat text eol=crlf
+*.png binary
+*.bin binary
+# Retained generated/bundled code and third-party notices carry upstream formatting.
+LivingUniverse.html whitespace=-trailing-space
+docs/index.html whitespace=-trailing-space
+web/index.html whitespace=-trailing-space
+vendor/source-destination/SourceDestination.html whitespace=-trailing-space
+vendor/source-destination/index-JSZFV_jB.js whitespace=-trailing-space
+THIRD-PARTY-NOTICES.txt whitespace=-trailing-space
+docs/THIRD-PARTY-NOTICES.txt whitespace=-trailing-space
