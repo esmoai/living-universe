@@ -12,7 +12,7 @@
     "test:universe": "node --test tests/data.test.js tests/universe.test.js"
   },
   "dependencies": {
-    "three": "0.180.0"
+    "three": "0.186.1"
   },
   "devDependencies": {
     "vite": "7.3.7"
