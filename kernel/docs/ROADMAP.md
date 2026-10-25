@@ -1,70 +1,25 @@
-# Dual-architecture roadmap (gated)
+# Dual-architecture kernel roadmap
 
-## Gate 0A — x86-64 firmware handoff
+## Stage 0 evidence
 
-- Native `BOOTX64.EFI` with UEFI entry, final memory map, serial diagnostics,
-  and direct GOP framebuffer drawing.
-- GPT/FAT32 removable disk image, structural validation, deterministic builds.
+The shared C core and both native UEFI ports compile. Public CI commit b1126982843b9ab51290fa3e935ad0ecafa13052 performed actual x86-64 q35/OVMF and AArch64 virt/AAVMF boots. Both passed help/status/cpu/mem/universe and schema/architecture validation. ARM used the explicit QEMU UART profile. See ../../docs/VALIDATION.md and the real serial logs.
 
-**Current:** Compiled and statically validated. Not emulator/hardware tested.
+This is the first emulator smoke gate, not complete hardware qualification. Wider memory-map configurations, the generic ARM64 image and firmware discovery, visual framebuffer tests, faults and physical machines remain open. No test fixture may substitute for a real boot.
 
-## Gate 0B — ARM64 firmware handoff (new, parallel)
+## Gate 1: independent hardware control on both ISAs
 
-- Native `BOOTAA64.EFI` with the *same* kernel/firmware-handoff code.
-- ARM64 CPU/interrupt/poll primitives; PL011/SBSA early console via SPCR.
-- QEMU `virt`-only UART fallback as an explicit separate test build.
-- ARM64 and dual-architecture GPT/FAT32 boot images; static checks.
-- Negative unit tests for SPCR parser with ASan/UBSan.
+Implement physical allocation, reserved-memory accounting, controlled page tables, W^X/NX attributes, exception handling and recoverable diagnostics. x86 needs GDT/IDT/TSS and APIC/timers; ARM64 needs vectors/ESR/FAR, TTBR/TCR/MAIR, GIC and architected timers. Validate mapping, caches, TLB behavior and fault tests per platform.
 
-**Current:** Compiled and statically validated; host parser tests pass.
-Not emulator/hardware tested.
+## Gate 2: isolated microkernel tasks
 
-### Gate 0 exit requirements BEFORE advancing either architecture
+Add ring 3 / EL0 transitions, separated address spaces, capability handles with delegation and revocation, checked syscalls/IPC, preemption and budgets. Demonstrate containment of malformed messages, forged handles, memory violations, exhaustion and crashes before executing external programs.
 
-1. Execute `BOOTX64.EFI` under UEFI/OVMF in at least two virtual configurations.
-2. Execute `BOOTAA64.EFI` under AArch64 QEMU/edk2 with serial diagnostics and
-   `help`, `status`, `mem`, `cpu`, and `halt` commands.
-3. Validate framebuffer on an emulator model with an actual GOP device.
-4. Confirm `ExitBootServices` succeeds under several memory-map layouts.
-5. Boot both on a documented, noncritical physical UEFI machine/board.
-6. Record firmware versions, hardware capabilities, and serial output in tests.
+## Gate 3: independently useful services
 
-These tests have **not been performed** in this delivery.
+Drivers for declared hardware, storage/filesystems, USB/HID, networking, graphics, entropy and cryptography. Keep most complex services outside privileged kernel memory. Validate DMA/IOMMU policy and a verified recoverable update chain.
 
-## Gate 1 — MMU/interrupt control on both ISAs
+## Gate 4: permissioned tools
 
-- Shared physical page-frame allocator using boot memory map and reservation.
-- x86-64 GDT/IDT/TSS, paging, NX, APIC and exception diagnostics.
-- ARM64 VBAR, ESR/FAR, TTBR/TCR/MAIR, supported granules, GIC and arch timer.
-- No return to firmware page tables, correct cache/device memory attributes,
-  shootdowns, invalid-mapping rejection and safe fault reporting.
+Native loaders for explicit ABIs, isolated WASM and interpreter hosts, monitored resource limits and authentic package provenance. Foreign OS/ISA compatibility needs a declared VM/emulator path, not an assertion that C executes any binary.
 
-Exit: verified page isolation and repeatable exception/fault tests on both ISAs.
-
-## Gate 2 — isolated microkernel primitives on both ISAs
-
-- Ring 3 / EL0 user processes, address spaces and privilege transitions.
-- Versioned capability table, delegation/revocation, safe syscalls and IPC.
-- Preemptive scheduling and process lifetime/resource enforcement.
-- Memory and privilege adversarial tests, including malicious user programs.
-
-Exit: process-to-process and process-to-kernel memory isolation demonstrated.
-
-## Gate 3 — minimum independently useful OS services
-
-- PCIe, storage, USB/HID, filesystems, network, graphics, entropy and crypto.
-- User-space driver services and device DMA/IOMMU policy.
-- Install/recovery pipeline with signed, verifiable updates.
-
-## Gate 4 — permissioned tool ecosystem
-
-- Native loaders for supported ABI targets, isolated WASM host and interpreters.
-- User-verified tool manifests, resource metering and auditability.
-- Foreign OS/ISA virtual machines and emulators as constrained services.
-
-## Platform policy
-
-Every architecture milestone must have its own compatible boot image and
-hardware tests. AArch64 UEFI support does not imply compatibility with locked
-phones, Apple Silicon, vendor-boot-only ARM boards, or every new motherboard.
-No claims of universally executing any executable format until demonstrated.
+Every claim must name its tested configuration. ARM64 does not imply phones, Apple Silicon or all vendor boards. RISC-V and other architectures require separate ports.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Portable real-process smoke test for Linux and Windows, without privileged access."""
+"""Portable real-process smoke test; original log bytes must survive unchanged."""
 import argparse, json, queue, re, socket, subprocess, sys, tempfile, threading, time
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -10,13 +10,20 @@ parser.add_argument('--binary',type=Path,required=True)
 parser.add_argument('--web',type=Path,required=True)
 args=parser.parse_args()
 results=[]
+def report():
+    value={'platform':sys.platform,'checks':len(results),'passed':sum(x['passed'] for x in results),'results':results}
+    (ROOT/'validation').mkdir(exist_ok=True)
+    (ROOT/'validation'/('observer-smoke-'+sys.platform+'.json')).write_text(json.dumps(value,indent=2)+'\n')
 def check(name,value):
     results.append({'name':name,'passed':bool(value)})
+    report()
     if not value: raise AssertionError(name)
 with socket.socket() as s:
     s.bind(('127.0.0.1',0)); port=s.getsockname()[1]
 with tempfile.TemporaryDirectory(prefix='lu smoke ') as temp:
-    log=Path(temp)/'selected log.txt';log.write_text('Explicitly selected smoke-test fixture\n')
+    log=Path(temp)/'selected log.txt'
+    fixture=b'Explicitly selected smoke-test fixture\r\n'
+    log.write_bytes(fixture)
     command=[str(args.binary.resolve()),'--web',str(args.web.resolve()),'--log',str(log),'--port',str(port)]
     process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     lines=queue.Queue()
@@ -47,7 +54,8 @@ with tempfile.TemporaryDirectory(prefix='lu smoke ') as temp:
         check('native OS identity matches',data.get('host_os')==('Windows' if sys.platform=='win32' else 'Linux'))
         check('native execution unavailable',data.get('execution_available') is False)
         check('host writes unavailable',data.get('filesystem_write_available') is False)
-        check('only chosen log returned',data.get('serial_log')==log.read_text())
+        # Text-mode reads normalize Windows CRLF; this API must preserve bytes instead.
+        check('chosen log bytes and CRLF preserved',data.get('serial_log')==fixture.decode('ascii'))
         check('cross-origin denied',get('/api/snapshot',{'X-Universe-Key':key,'Origin':'https://example.invalid'})[0]==403)
         check('no arbitrary file endpoint',get('/etc/passwd')[0]==404)
         check('key not echoed in snapshot',key.encode() not in body)
@@ -56,7 +64,4 @@ with tempfile.TemporaryDirectory(prefix='lu smoke ') as temp:
         try: process.wait(timeout=5)
         except subprocess.TimeoutExpired: process.kill();process.wait()
         process.stdout.close()
-report={'platform':sys.platform,'checks':len(results),'passed':sum(x['passed'] for x in results),'results':results}
-(ROOT/'validation').mkdir(exist_ok=True)
-(ROOT/'validation'/('observer-smoke-'+sys.platform+'.json')).write_text(json.dumps(report,indent=2)+'\n')
 print('PASS:',len(results),'real-process observer checks on',sys.platform)

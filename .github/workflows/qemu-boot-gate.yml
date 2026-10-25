@@ -7,15 +7,28 @@ jobs:
   qemu:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      CC: clang-18
+      LINKER: lld-link-18
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Install QEMU and UEFI firmware for actual emulator execution
+      - name: Install compiler, linker, QEMU and matching firmware
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends qemu-system-x86 qemu-system-arm ovmf qemu-efi-aarch64
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends clang-18 lld-18 qemu-system-x86 qemu-system-arm ovmf qemu-efi-aarch64
+          command -v "$CC"
+          command -v "$LINKER"
       - name: Compile x86-64 and AArch64 kernels
         run: sh kernel/scripts/build.sh
-      - name: Run BOTH actual firmware gates (no network, no host disk)
-        run: sh kernel/scripts/test_qemu.sh --arch both
+      - name: Run both actual firmware gates
+        run: python3 kernel/scripts/boot_qemu.py --arch both --timeout-x86 120 --timeout-arm 240
+      - name: Preserve real serial evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: manual-qemu-logs
+          path: kernel/runtime-tests/*.log
+          if-no-files-found: warn
+          retention-days: 30
