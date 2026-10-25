@@ -1,4 +1,4 @@
-# Local environment and credentials
+# Local credentials, workspaces and editor data
 .env
 .env.*
 !.env.example
@@ -16,8 +16,7 @@
 .vscode/
 .DS_Store
 Thumbs.db
-
-# Dependencies and build artifacts
+# Generated dependencies and binaries belong in release assets
 **/node_modules/
 source/dist/
 source/portable/*.html
@@ -32,14 +31,14 @@ validation/
 *.img
 *.iso
 *.qcow2
-*.qcow2
 *.o
 *.obj
 *.dSYM/
 __pycache__/
 .pytest_cache/
-
-# User backups, captured data and authoring artifacts
+/_site/
+/dist/
+# Private backup inputs are not required by public builds
 reference/
 private/
 secrets/

@@ -3,6 +3,9 @@ set -eu
 cd "$(dirname "$0")/.."
 : "${CC:=clang}"
 : "${LINKER:=lld-link}"
+for tool in "$CC" "$LINKER"; do
+  command -v "$tool" >/dev/null 2>&1 || { printf 'Missing tool: %s; install clang/lld or set CC and LINKER.\n' "$tool" >&2; exit 127; }
+done
 mkdir -p bridge/winbuild
 for lib in kernel32 ws2_32 bcrypt shell32; do
   "$LINKER" /lib /def:"bridge/winbuild/$lib.def" /machine:x64 /out:"bridge/winbuild/$lib.lib"

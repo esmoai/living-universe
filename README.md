@@ -2,60 +2,52 @@
 
 **An open-source spatial observatory and experimental C-native operating-system project.**
 
-[Explore the interactive demo](https://esmoai.github.io/living-universe/) · [Architecture](docs/ARCHITECTURE.md) · [Build and test](docs/BUILD_AND_TEST.md) · [Compatibility](docs/COMPATIBILITY.md) · [Contribute](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Start here](START_HERE.md) · [Complete downloads](https://github.com/esmoai/living-universe/releases) · [Website / deployment](https://esmoai.github.io/living-universe/) · [Architecture](docs/ARCHITECTURE.md) · [Build and test](docs/BUILD_AND_TEST.md) · [Compatibility](docs/COMPATIBILITY.md) · [Contribute](CONTRIBUTING.md)
 
-> **Pre-alpha, version 0.3.0.** The interactive interface is a real local data/bit inspector with recorded workspace history. The freestanding x86-64 and ARM64 C kernel remains **Stage 0**: independent page tables, task isolation, drivers and arbitrary program execution are **not implemented**. Dual-architecture firmware boots and hardware testing are **not yet verified**. Do not use this kernel on production devices.
+> **Pre-alpha.** The interface is a local data/bit inspector with recorded workspace history. The x86-64 and ARM64 C kernel remains **Stage 0**: independent page tables, task isolation, drivers and arbitrary native program execution are **not implemented**. Check the exact commit's CI for emulator results. Physical hardware and production security are not verified.
 
-### The idea
+## Source, complete downloads and the website
 
-What if a computer could be explored as a connected world rather than a stack of windows? *Living Universe* turns information into a traversable scene. **Peer, inspect, observe, recall, handle, curate, nourish and touch** are its guiding interactions.
+The source repository and its automatic **Code > Download ZIP** contain maintained code, tests, documentation, sample data and standalone HTML. Generated executables and disk images are delivered separately, not lost or silently omitted.
 
-The current scene preserves the original spectral globe, cube, three portals and XR navigation path. Optional floating instruments allow navigation through 12 information channels, exact selected-file bytes and bit positions, provenance, local annotations, and read-only recall of recorded states. Sample records are labeled **simulated**; actual measurements are **observed**; imported serial logs are **reported** rather than authenticated.
+**[Complete runnable releases](https://github.com/esmoai/living-universe/releases)** include editable source, offline HTML, Windows launchers and unsigned EXE, Linux observer, x86-64 and ARM64 EFI files, the ARM64 QEMU variant, all four boot images and checksums. A pre-alpha release is published only after that commit passes source checks, both actual QEMU boot gates, and a native Windows observer smoke test. If no release exists yet, inspect the failing or pending [Actions run](https://github.com/esmoai/living-universe/actions/workflows/ci.yml).
 
-### Architecture — today vs. goal
+A source upload is **not** a deployed website. If the demo returns 404, select **Settings > Pages > Source > GitHub Actions**, then run **Deploy interactive demo**. [Publication instructions](docs/PUBLISHING.md) explain this one-time owner setting. The workflow verifies the published commit through `status.json`; no privileged backend is deployed.
+
+[Coverage of the three supplied archives](docs/FILE_COVERAGE.md) documents the maintained sources, generated outputs and excluded private/historical references.
+
+## The idea
+
+What if a computer could be explored as a connected world rather than a stack of windows? Living Universe turns information into a traversable scene. **Peer, inspect, observe, recall, handle, curate, nourish and touch** are its guiding interactions.
+
+The scene preserves the original spectral globe, cube, three portals and XR navigation path. Floating instruments expose 12 information channels, exact selected-file bytes and bits, provenance, annotations, local routing and read-only recall. Sample records are **simulated**; actual readings are **observed**; imported serial logs are **reported**, not authenticated.
 
 ```text
-Browser / portable HTML (runs now)      Kernel / bare-metal C (Stage 0)
-    Spatial field, 12 channels           x86-64 UEFI      AArch64 UEFI
-    Inspect, bits, recorded history          |                |
-                 |                          +--- shared C ---+
-     OPTIONAL read-only bridge                      |
-       Linux / Windows C user tool             @LU1 serial report
-         (not the kernel)                     (no user-space isolation)
+Browser / portable HTML                Bare-metal C kernel (Stage 0)
+Spatial field, inspection, history      x86-64 UEFI + AArch64 UEFI
+             |                                  |
+Optional loopback C observer                @LU1 serial report
+(hosted Windows/Linux tool)               (no task isolation yet)
 ```
 
-**Runtime boundary:** a hosted local C observer can report its own process readings and optionally import one selected kernel serial log. It binds to `127.0.0.1`, uses a random session key, and exposes **no execution or host-write endpoint**. The eventual C microkernel capability broker is design work, not a deployed security guarantee.
+The hosted observer reports its own process measurements and optionally reads one selected serial log. It binds to `127.0.0.1`, requires a random session key, and exposes no execution or host-write endpoint. It is not the eventual kernel capability broker and is not an OS sandbox.
 
-### Run the demo
+## Run
 
-Open [LivingUniverse.html](LivingUniverse.html) in a modern browser or use `Launch-LivingUniverse.bat` on Windows. The public [GitHub Pages demo](https://esmoai.github.io/living-universe/) hosts the same standalone static experience **once Pages is enabled**. No server, PHP, Node.js, or account is required to explore or import a local sample.
+Extract a complete release and open `LivingUniverse.html` or `Launch-LivingUniverse.bat`. The static browser experience needs no PHP, Node.js server or account. Initial records are simulated; no upload or scan happens by default.
 
-Try `samples/precision.bin`: bytes `81 42 00 FF 80 41`; first byte bits `10000001` (MSB first). Use **I → Instruments**, import the file, inspect Bits, add a local note and visit Recall. Initial records are simulated. No uploads or scans occur by default. Exported workspaces are plaintext—do not publish them casually.
+Import `samples/precision.bin`: bytes `81 42 00 FF 80 41`; first byte bits `10000001`, most-significant bit first. Open **I / Instruments**, inspect Bits, annotate and visit Recall. Export before closing. Saved workspaces are plaintext and may contain private imported material.
 
-On a browser without WebGL2, a simpler Canvas2D spatial view operates; it **does not provide VR**. XR and real-hardware behavior still need independent testing.
+Without WebGL2 a simpler Canvas2D spatial view operates; it does not provide VR. Detailed inspector cards are desktop UI, not a completed headset cockpit.
 
-### Develop
+## Develop and verify
 
-See [Build & Test](docs/BUILD_AND_TEST.md). The public source, offline runtime packager, Linux C observer, Windows cross-build scripts, kernel source, QEMU test runner, unit tests and examples are included. **Generated executables, boot disk images, personal reference archives, saved workspaces and runtime logs are deliberately not committed.**
+See [Build & Test](docs/BUILD_AND_TEST.md), [Codex handoff](docs/CODEX_HANDOFF.md), [Validation](docs/VALIDATION.md) and [Compatibility](docs/COMPATIBILITY.md). Source/model tests, real Linux API tests, cross-compilation, firmware emulation and physical hardware are different verification levels. Never report a fixture or a compiled image as a successful hardware boot.
 
-### Status
+The offline packager updates all standalone HTML copies together. CI installs compiler/linker prerequisites explicitly, builds both kernel architectures, collects diagnostics, tests the Windows executable, and packages release assets from the same commit. Native services remain local.
 
-| Workstream | What is verified | Still open |
-| --- | --- | --- |
-| Visual interface | Prior local model + Canvas2D workflow tests | WebGL/WebXR regression on compatible hardware |
-| Linux C observer | Prior local loopback/API and sanitizer checks | External security review; production hardening |
-| Windows C observer | Cross-compiled PE structure | Runtime smoke test on Windows |
-| x86-64 + ARM64 C kernel | Both targets compile and pass static image checks | Actual UEFI/QEMU and physical boot, MMU/interrupts/isolation |
-| Open-source publication | Sanitized source and static site prepared | Pages activation and public CI results |
+## Licensing and community
 
-Read [Validation](docs/VALIDATION.md) for the provenance and limitations of previous tests. Tests have not been silently upgraded to hardware verification.
+Original project code is under [Apache-2.0](LICENSE). Third-party libraries and bundled material retain their terms: [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES.txt), [NOTICE](NOTICE.md), [Provenance](docs/PROVENANCE.md). Verify rights before adding new assets.
 
-### Licensing
-
-Original project code contributed with publication authorization is provided under the [Apache License 2.0](LICENSE). Third-party libraries and generated bundled material retain their existing terms; see [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) and [NOTICE.md](NOTICE.md). Please verify rights before introducing new assets or dependencies.
-
-### Community
-
-Pull requests and reproducible issue reports are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) and [GOVERNANCE.md](GOVERNANCE.md). **No contributor can claim a secure kernel from source compilation alone.**
-
-Source and disclosure: [Provenance](docs/PROVENANCE.md) · [Public-release audit](docs/PUBLIC_AUDIT.md).
+Read [Contributing](CONTRIBUTING.md), [Code of Conduct](CODE_OF_CONDUCT.md), [Security](SECURITY.md) and [Governance](GOVERNANCE.md). No contributor may claim a secure kernel from compilation alone.

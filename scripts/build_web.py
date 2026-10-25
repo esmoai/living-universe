@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
-"""Offline, deterministic packager for the retained Source/Destination runtime.
-No package installation or network is required. This is deliberately NOT a general
-JavaScript bundler: only the checked named-import/export subset used by our modules.
-The original, pinned production bundle remains intact except for a narrow adapter.
-The editable Vite source also provides a conventional full-source rebuild path.
-"""
+"""Offline deterministic extension packager; not a replacement for the full Vite build."""
 from pathlib import Path
-import re, hashlib
+import re, hashlib, json
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / 'source' / 'src'
-# Clean public input: exact original build material without the private backup ZIP.
 upstream = ROOT / 'vendor' / 'source-destination'
 html_bytes = (upstream / 'SourceDestination.html').read_bytes()
 html = html_bytes.decode('utf-8')
@@ -36,12 +30,11 @@ for name in modules:
         key = Path(module).name
         if key not in modules: raise SystemExit(f'Unknown module {key}')
         return f'const {{{fields}}} = require({key!r});'
-    code = re.sub(r'import\s*\{([^}]+)\}\s*from\s*[\'"]([^\'"]+)[\'"];?', imported, code)
+    code = re.sub(r'import\s*\{([^}]+)\}\s*from\s*[\'\"]([^\'\"]+)[\'\"];?', imported, code)
     code = re.sub(r'\bexport\s+(?=(?:async\s+)?(?:function|class|const|let)\b)', '', code)
     if re.search(r'^\s*(?:import|export)\s', code, re.M): raise SystemExit(f'Unsupported module syntax in {name}')
     compiled.append(f'{name!r}: function(require) {{\n{code}\nreturn {{{", ".join(dict.fromkeys(exports))}}};\n}}')
 adapter = '\nwindow.SourceDestination={experience:Yt,notice:mi,types:{Group:Je,Mesh:de,SphereGeometry:Yn,BoxGeometry:nr,MeshBasicMaterial:Xn,Vector3:Yt?Yt.orbitCamera.position.constructor:null,Color:Gt}};\n'
-# The original portable page has one application module script.
 pattern = r'(<script\b[^>]*type="module"[^>]*>)([\s\S]*?)(</script\s*>)'
 matches = list(re.finditer(pattern, html))
 if len(matches) != 1: raise SystemExit('Expected exactly one retained application script.')
@@ -54,10 +47,11 @@ css = (SOURCE / 'universe.css').read_text().replace('</style', '<\\/style')
 html = html.replace('</head>', '<style>\n'+css+'\n</style>\n</head>')
 html = html.replace('</body>', '<script type="module">\n'+script+'\n</script>\n</body>')
 html = html.replace('<title>Source / Destination', '<title>Living Universe v0.3 / Source / Destination')
-(ROOT / 'LivingUniverse.html').write_text(html)
-(ROOT / 'web').mkdir(exist_ok=True)
-(ROOT / 'web' / 'index.html').write_text(html)
+for relative in ('LivingUniverse.html', 'web/index.html', 'docs/index.html'):
+    target = ROOT / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(html, encoding='utf-8', newline='\n')
 (ROOT / 'validation').mkdir(parents=True, exist_ok=True)
 (ROOT / 'validation' / 'extension-syntax.js').write_text(script)
-(ROOT / 'validation' / 'web-build.json').write_text(__import__('json').dumps({'original_bundle_sha256':original_hash,'html_sha256':hashlib.sha256(html.encode()).hexdigest(),'html_bytes':len(html.encode()),'new_modules':modules,'network_required':False},indent=2)+'\n')
+(ROOT / 'validation' / 'web-build.json').write_text(json.dumps({'original_bundle_sha256':original_hash,'html_sha256':hashlib.sha256(html.encode()).hexdigest(),'html_bytes':len(html.encode()),'new_modules':modules,'network_required':False},indent=2)+'\n')
 print(f'Offline HTML built: {len(html.encode()):,} bytes; retained field runtime + {len(modules)} local modules.')

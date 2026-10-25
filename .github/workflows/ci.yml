@@ -8,28 +8,27 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   web-and-model:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
-          package-manager-cache: false
-      - name: Offline bundle integrity and source tests
+      - name: Offline integrity and model tests
         run: |
           python3 scripts/build_web.py
           cmp LivingUniverse.html web/index.html
           cmp web/index.html docs/index.html
           node --check validation/extension-syntax.js
           node --test source/tests/data.test.js source/tests/universe.test.js
-      - name: Full source dependencies and build
+      - name: Full editable-source tests and build
         working-directory: source
         run: |
           npm ci --ignore-scripts --no-audit --fund=false
@@ -37,28 +36,115 @@ jobs:
           npm run build
   native-and-kernel:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
+    env:
+      CC: clang-18
+      LINKER: lld-link-18
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Compile hosted C observer and test read-only API
+      - name: Install explicit native linker and emulator prerequisites
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends clang-18 lld-18 qemu-system-x86 qemu-system-arm ovmf qemu-efi-aarch64
+          command -v "$CC"
+          command -v "$LINKER"
+      - name: Native observer, telemetry and Windows cross-build
+        run: |
+          mkdir -p validation
           sh scripts/build_bridge.sh
           python3 tests/test_bridge.py
+          python3 tests/test_observer_smoke.py --binary bin/living-universe-observer-linux --web LivingUniverse.html
           python3 tests/test_kernel_telemetry.py
-      - name: Compile both bare-metal UEFI targets and validate disks
+          sh scripts/build_windows_bridge.sh
+      - name: Compile both UEFI ports and verify disk contents
         run: |
           cd kernel
           sh scripts/test_host.sh
           sh scripts/build.sh
           (cd build && sha256sum -c SHA256SUMS)
+      - name: Actual dual-architecture firmware boot gate
+        run: python3 kernel/scripts/boot_qemu.py --arch both --timeout-x86 120 --timeout-arm 240
+      - name: Assemble the complete downloadable kit
+        run: python3 scripts/package_release.py
+      - name: Preserve diagnostic evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-validation
+          path: |
+            validation/*.json
+            kernel/runtime-tests/*.log
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Upload runnable release payload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: complete-kit
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+  windows-observer:
+    needs: native-and-kernel
+    runs-on: windows-2022
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Download and test the actual Windows executable
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name complete-kit --dir dist
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Expand-Archive dist/LivingUniverse-Complete-Kit.zip -DestinationPath payload
+          $kit = Get-ChildItem payload -Directory | Select-Object -First 1
+          python tests/test_observer_smoke.py --binary "$($kit.FullName)/LivingUniverse-Observer.exe" --web "$($kit.FullName)/LivingUniverse.html"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: windows-validation
+          path: validation/observer-smoke-win32.json
+          if-no-files-found: warn
+          retention-days: 30
   release-safety:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Ensure private backups, images and secrets are not tracked
-        run: python3 scripts/check_public_release.py
+      - run: python3 scripts/check_public_release.py
+  publish-prealpha:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [web-and-model, native-and-kernel, windows-observer, release-safety]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Publish an immutable pre-alpha release after all checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(cat RELEASE_VERSION)"
+          if ! printf '%s' "$version" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+-prealpha$'; then exit 2; fi
+          if gh release view "$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'Existing release left unchanged; increment RELEASE_VERSION for a new release.'
+            exit 0
+          fi
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name complete-kit --dir dist
+          printf '\nValidation run: https://github.com/%s/actions/runs/%s\n' "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> dist/RELEASE_NOTES.txt
+          (cd dist && sha256sum LivingUniverse-Complete-Kit.zip LivingUniverse-Offline.html RELEASE_NOTES.txt > SHA256SUMS.txt)
+          gh release create "$version" dist/LivingUniverse-Complete-Kit.zip dist/LivingUniverse-Offline.html dist/RELEASE_NOTES.txt dist/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "Living Universe $version" --notes-file dist/RELEASE_NOTES.txt

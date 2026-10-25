@@ -1,58 +1,53 @@
-# Build and test
+# Build, test and package
 
-## Requirements
+Opening LivingUniverse.html needs a modern browser, not Node or PHP. Development needs Git, Python 3.11+, Node 22+, a C compiler, Clang and LLVM lld-link. Firmware tests additionally need QEMU and matching OVMF/AAVMF firmware.
 
-For the source/test workflow: Python 3.11+, Node.js 22+, a C17 compiler; Clang and `lld-link` for UEFI/Windows cross-builds. GitHub CI will use pinned actions and explicit read-only permissions. Running the standalone HTML needs only a modern browser.
+## Ubuntu 24.04 example
 
-## Offline web build
+```sh
+sudo apt-get update
+sudo apt-get install -y build-essential clang-18 lld-18 python3 \
+  qemu-system-x86 qemu-system-arm ovmf qemu-efi-aarch64
+export CC=clang-18
+export LINKER=lld-link-18
+```
 
-```bash
+Use packages suitable for your distribution. Versioned LLVM tools may not appear as unversioned lld-link. CI installs and selects its required linker rather than relying on undocumented runner defaults.
+
+## Web and models
+
+```sh
 python3 scripts/build_web.py
 node --check validation/extension-syntax.js
 node --test source/tests/data.test.js source/tests/universe.test.js
+(cd source && npm ci --ignore-scripts --no-audit --fund=false && npm test && npm run build)
 ```
 
-The packager checks SHA-256 of the retained original Source / Destination runtime in `vendor/` and embeds the added instruments without downloading npm packages. It writes `LivingUniverse.html` and `web/index.html`; publication uses the identical `docs/index.html` after an explicit copy/check. This is a **narrow extension packager**, not a general replacement for Vite. Changing the original Three.js scene requires a full source build and review of the adapter.
+The offline packager now updates LivingUniverse.html, web/index.html and docs/index.html together. It hash-checks the retained original runtime. Original scene changes require the full Vite build and deliberate adapter review; this wrapper is not a general-purpose compiler. Dependency changes must not silently invalidate the retained runtime.
 
-## Editable Vite source
+## Native observer and dual-architecture kernel
 
-```bash
-cd source
-npm ci
-npm test
-npm run build
-```
-
-Node.js is a build tool, not a dependency of the deployed static HTML. The dependency lockfile is checked in. Avoid silently upgrading packages when reproducing an issue.
-
-## Native hosted observer
-
-```bash
+```sh
 sh scripts/build_bridge.sh
 python3 tests/test_bridge.py
-# Cross-build Windows x64 binary on a machine with clang and lld-link
+python3 tests/test_observer_smoke.py --binary bin/living-universe-observer-linux --web LivingUniverse.html
+python3 tests/test_kernel_telemetry.py
 sh scripts/build_windows_bridge.sh
+sh kernel/scripts/test_host.sh
+sh kernel/scripts/build.sh
+python3 kernel/scripts/boot_qemu.py --arch both
 ```
 
-The Windows executable is unsigned and has not been verified by running it on Windows in the previous release. Do not disable security protections to run it. The C observer runs as a normal user-space application on Windows/Linux, **not inside the bare-metal kernel**. Its loopback-only API is documented in [Protocol](PROTOCOL.md).
+The Windows EXE is unsigned and cross-built without a CRT dependency. CI runs it on Windows in a separate smoke job; that is not a security certification. QEMU uses temporary disk/NVRAM copies, TCG software emulation, no guest networking and no physical disk. Serial fixtures never satisfy the actual boot gate.
 
-## Kernel build and QEMU validation
+## Complete local kit
 
-```bash
-cd kernel
-sh scripts/test_host.sh
-sh scripts/build.sh
-sh scripts/test_qemu.sh --arch both
+After building all outputs:
+
+```sh
+python3 scripts/package_release.py
 ```
 
-`build.sh` creates **generated** x86-64, generic AArch64, QEMU-virt AArch64, and dual-UEFI boot media under `kernel/build/`. This directory is deliberately gitignored. The QEMU runner makes temporary disk/NVRAM copies, runs without networking, and requires real `@LU1` output from each architecture. Do not pass test fixtures off as firmware output. No user data drive should be touched.
+Packaging fails if a required EXE, observer, EFI or disk image is missing. Outputs are dist/LivingUniverse-Complete-Kit.zip, LivingUniverse-Offline.html, notes and checksums. Source comes from Git's tracked-file list, not a sweep of private archives, arbitrary logs or workspaces. In GitHub CI, explicitly produced emulator logs are included. Review the exact commit and its CI results before claiming a test passed.
 
-Host prerequisites on Ubuntu/Debian include `qemu-system-x86`, `qemu-system-arm`, `ovmf` and `qemu-efi-aarch64` for the real firmware gate. The QEMU gate remains **not yet confirmed** on this public release; firmware or physical hardware execution is not established by static builds.
-
-## Automated tests
-
-The root `scripts/test_all.sh` checks offline web, JavaScript tests, C observer, telemetry formatter and dual-architecture kernel build. Browser integration tests in `tests/test_browser.py` require Playwright/Chromium (not part of normal production dependencies). They previously ran in Canvas2D fallback mode, not WebGL or XR. The optional QEMU workflow is a **real runtime gate**, not a substitute for physical target testing.
-
-## Podman lab
-
-See `Containerfile` for a replaceable development environment. It is **not the kernel**. Start rootless, without `--privileged` or host device mounts, and build with pinned base-image digests for a production CI baseline. Podman test setup is a proposed workflow rather than a previously validated artifact.
+Browser regression tests/test_browser.py requires Playwright/Chromium. Earlier tests used an injected document and Canvas2D fallback. WebGL, real touch/VR hardware and physical-board boot need separate acceptance tests. Podman is development tooling, not the operating system under development.
