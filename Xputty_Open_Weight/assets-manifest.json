@@ -1,0 +1,17 @@
+{
+  "assets": [
+    {
+      "name": "tika",
+      "url": "https://archive.apache.org/dist/tika/3.2.3/tika-app-3.2.3.jar",
+      "sha256": "80c20c085e2c0976bbd55969e5bf90dda2b7155db31068639fbc871d0369e7e7",
+      "destination": "tools/tika-app-3.2.3.jar"
+    },
+    {
+      "name": "vosk",
+      "url": "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip",
+      "sha256": "30f26242c4eb449f948e42cb302dd7a686cb29a3423a8367f99ff41780942498",
+      "destination": "models/vosk-model-small-en-us-0.15",
+      "archive": true
+    }
+  ]
+}

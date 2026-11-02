@@ -1,0 +1,12 @@
+{
+  "vosk_model": "models/vosk-model-small-en-us-0.15",
+  "vision_url": "http://127.0.0.1:11434",
+  "vision_model": "qwen3.5:4b-q4_K_M",
+  "threads": 2,
+  "vision_timeout_seconds": 300,
+  "processing_timeout_seconds": 14400,
+  "video_sample_interval_seconds": 10,
+  "image_max_side": 1280,
+  "tika_jar": "tools/tika-app-3.2.3.jar",
+  "java": "java"
+}

@@ -1,0 +1,106 @@
+{
+  "name": "Xputty Open Weight 48M",
+  "version": "0.5.1",
+  "branch": "xputty-open-weight-48m",
+  "architecture": {
+    "parameters": 48116224,
+    "layers": 12,
+    "dim": 512,
+    "heads": 8,
+    "ffn_dim": 1472,
+    "vocab_size": 8192,
+    "max_context": 2048
+  },
+  "ci_status": "pending esmoai branch publication",
+  "limitations": [
+    "Five-update acceptance model is not a coherent podcast host",
+    "Chrome visual acceptance not automated",
+    "CUDA and MPS execution not verified; macOS uses CPU",
+    "Whole-source holdouts and token loss do not establish conversational quality"
+  ],
+  "publication_exclusions": [
+    "project storage",
+    "access tokens",
+    "user transcripts",
+    "trained weights",
+    "virtual environments"
+  ],
+  "previous_mechanics_acceptance": {
+    "platform": "Windows CPU, Python 3.10, two execution cores",
+    "full_size_updates": 5,
+    "context_updates": {
+      "256": 2,
+      "512": 1,
+      "1024": 1,
+      "2048": 1
+    },
+    "hf_parity": {
+      "256": {
+        "max_logit_difference": 0.0,
+        "passed": true
+      },
+      "512": {
+        "max_logit_difference": 0.0,
+        "passed": true
+      },
+      "1024": {
+        "max_logit_difference": 0.0,
+        "passed": true
+      },
+      "2048": {
+        "max_logit_difference": 0.0,
+        "passed": true
+      }
+    },
+    "ollama_load_and_generation": true,
+    "chat_api_contexts": [
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "exact_resume_unit_test": "passed",
+    "ui_state_tests": "passed (synthetic DOM; no visual browser acceptance)",
+    "observed_post_update_rss_bytes": 1452765184,
+    "four_update_training_seconds": 25.993,
+    "pytest_tests_passed": 25,
+    "full_suite": "passed"
+  },
+  "current_software_tests": {
+    "full_suite_tests_passed": 37,
+    "scope": "Windows CPU; before the final native-sampling configuration test",
+    "focused_research_tests_passed": 13,
+    "node_ui_state": "passed",
+    "chrome_visual_acceptance": "blocked: computer-use runtime cannot write kernel assets",
+    "linux_macos_ci": "not yet run for 0.5.1"
+  },
+  "public_experiments": {
+    "scratch_48m_updates": 200,
+    "scratch_quality": "fragmented; not a coherent host",
+    "control_135m_selected_update": 0,
+    "student_05b_selected_update": 80,
+    "student_05b_quality": "failed free-response behavior despite lower validation loss",
+    "quantized_adapter_15b": {
+      "updates": 80,
+      "selected_update": 70,
+      "trainable_parameters": 1318912,
+      "before_val": {
+        "assistant_token_loss": 3.447366698393746,
+        "target_tokens": 252,
+        "conversations": 8
+      },
+      "selected_val": {
+        "assistant_token_loss": 2.987467110157013,
+        "target_tokens": 252,
+        "conversations": 8
+      },
+      "final_test": {
+        "assistant_token_loss": 3.097183292388916,
+        "target_tokens": 250,
+        "conversations": 8
+      },
+      "native_weights_sha256": "3b898a706fc0fe1afc7f8e618c42e691375be42d2f754cb3bf53fca6e182b38f",
+      "quality": "repeated earlier contributions in the controlled conversation test; not a release-ready host"
+    }
+  }
+}

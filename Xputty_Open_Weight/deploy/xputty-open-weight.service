@@ -1,0 +1,15 @@
+[Unit]
+Description=Xputty Open Weight worker
+After=network.target
+[Service]
+Type=simple
+WorkingDirectory=/opt/xputty-open-weight
+ExecStart=/opt/xputty-open-weight/.venv/bin/python server.py --host 127.0.0.1 --port 8788
+Environment=XOW_DATA=/var/lib/xputty-open-weight
+User=xputty
+Group=xputty
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target

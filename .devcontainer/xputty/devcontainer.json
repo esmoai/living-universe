@@ -1,0 +1,16 @@
+{
+  "name": "Xputty Open Weight \u00b7 Python 3.11",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
+  "postCreateCommand": "cd Xputty_Open_Weight && bash install.sh",
+  "postStartCommand": "cd Xputty_Open_Weight && .venv/bin/python tools/start_codespace.py",
+  "forwardPorts": [
+    8787
+  ],
+  "portsAttributes": {
+    "8787": {
+      "label": "Xputty Open Weight",
+      "onAutoForward": "notify"
+    }
+  },
+  "waitFor": "postCreateCommand"
+}

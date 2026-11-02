@@ -1,0 +1,15 @@
+Xputty Open Weight adapts the user-supplied VOX FIBRA laboratory and browser
+ingestion build. No user podcast transcripts or trained podcast weights are
+distributed in the application packages.
+
+Full media distributions bundle the unmodified Vosk small English model,
+vosk-model-small-en-us-0.15 (Alpha Cephei, Apache License 2.0).
+https://alphacephei.com/vosk/models
+The original model README is retained.
+
+Apache Tika application 3.2.3, Apache Software Foundation, Apache License 2.0.
+The unmodified JAR retains META-INF LICENSE/NOTICE and dependency notices.
+https://archive.apache.org/dist/tika/3.2.3/
+
+Python dependencies are installed separately and retain their own licenses.
+Java, Python interpreters, CUDA drivers and Ollama vision weights are not bundled.

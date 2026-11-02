@@ -1,0 +1,8 @@
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    gpus: all
+    environment:
+      XOW_DEVICE: cuda

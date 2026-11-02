@@ -1,0 +1,124 @@
+name: Xputty Open Weight · 48M
+on:
+  push:
+    branches: [xputty-open-weight-48m]
+    paths: ['Xputty_Open_Weight/**', '.github/workflows/xputty-open-weight.yml', '.devcontainer/**']
+  pull_request:
+    paths: ['Xputty_Open_Weight/**', '.github/workflows/xputty-open-weight.yml', '.devcontainer/**']
+permissions:
+  contents: read
+concurrency:
+  group: xputty-open-weight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  acceptance:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            package: windows
+          - os: ubuntu-latest
+            package: linux
+          - os: macos-latest
+            package: macos
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: Xputty_Open_Weight
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: Xputty_Open_Weight/requirements*.txt
+      - if: runner.os != 'macOS'
+        run: python -m pip install "torch>=2.6,<3" --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -c "import vosk; print('Vosk native library loaded')"
+      - run: python -m pytest tests -q
+        env:
+          VOX_DEVICE: cpu
+          VOX_OLLAMA_VERIFY: '0'
+      - run: node --check web/app.js
+      - run: node tests/ui_state_check.js
+      - run: python tools/fetch_assets.py
+      - run: python tools/build_packages.py --kind ${{ matrix.package }} --assets .
+      - uses: actions/upload-artifact@v4
+        with:
+          retention-days: 1
+          name: xputty-open-weight-${{ matrix.package }}
+          path: Xputty_Open_Weight/dist/*
+  deployment:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Xputty_Open_Weight
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install certifi
+      - run: python tools/fetch_assets.py
+      - run: python tools/build_packages.py --kind deployment --assets .
+      - run: python tools/build_packages.py --kind shared-hosting
+      - run: docker compose config --quiet
+      - run: docker build -t xow-acceptance .
+      - run: docker run --rm --entrypoint python xow-acceptance -c "from vox.model import TinyLlama,ModelConfig; print(TinyLlama(ModelConfig()).n_parameters())"
+      - uses: actions/upload-artifact@v4
+        with:
+          retention-days: 1
+          name: xputty-open-weight-deployment
+          path: Xputty_Open_Weight/dist/*
+  codespace-setup:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Xputty_Open_Weight
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: bash install.sh
+      - run: .venv/bin/python tools/check_setup.py
+      - name: Verify Codespaces startup
+        env:
+          CODESPACE_NAME: xow-ci
+          XOW_TOKEN: ci-ephemeral-key
+        run: |
+          .venv/bin/python tools/start_codespace.py
+          for i in $(seq 1 30); do
+            if curl -fsS -H 'Authorization: Bearer ci-ephemeral-key' http://127.0.0.1:8787/api/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat storage/codespace-worker.log
+          exit 1
+  release:
+    needs: [acceptance, deployment, codespace-setup]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: xputty-open-weight-*
+          path: release-assets
+          merge-multiple: true
+      - name: Publish verified distribution packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(cat Xputty_Open_Weight/VERSION)
+          tag="xow-v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; preserving its artifacts."
+            exit 0
+          fi
+          gh release create "$tag" release-assets/*.zip --target "$GITHUB_SHA" --title "Xputty Open Weight $version" --notes "Browser ingestion, review, training, audition and GGUF/Safetensors export. Windows, Linux and macOS acceptance tests passed. OS bundles include media assets; Python dependencies install on first launch. CPU Docker build checked; CUDA execution is not hardware-verified. No podcast data or trained research weights included."

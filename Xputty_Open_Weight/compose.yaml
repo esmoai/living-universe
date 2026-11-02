@@ -1,0 +1,8 @@
+services:
+  worker:
+    build: .
+    ports: ["127.0.0.1:8788:8787"]
+    volumes: ["./storage:/data"]
+    restart: unless-stopped
+    environment:
+      XOW_ORIGINS: ${XOW_ORIGINS:-}
